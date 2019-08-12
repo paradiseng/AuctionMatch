@@ -166,3 +166,21 @@ class TestAuction_match(TestCase):
         self.expected_qty = 25
 
         self.run_test()
+
+    def test_different_levels_multi_internal_ask(self):
+        self.bids = [
+            {'price': 101, 'qty': 10},
+            {'price': 100.6, 'qty': 20},
+            {'price': 100, 'qty': 10}
+        ]
+        self.asks = [
+            {'price': 101, 'qty': 20},
+            {'price': 100.5, 'qty': 10},
+            {'price': 100.4, 'qty': 10},
+            {'price': 100, 'qty': 10}
+        ]
+
+        self.expected_price = 100.6
+        self.expected_qty = 30.0
+
+        self.run_test()

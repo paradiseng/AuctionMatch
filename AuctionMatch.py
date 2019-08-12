@@ -1,3 +1,5 @@
+import itertools
+
 
 def is_cross(bid_price, ask_price):
     return bid_price >= ask_price
@@ -6,21 +8,17 @@ def is_cross(bid_price, ask_price):
 def auction_match(bids, asks):
     it_bids = iter(bids)
     it_asks = iter(asks)
-    # try:
-    #     bid = bids[0]
-    #     ask = asks[0]
-    # except IndexError:
-    #     return None, 0.0
 
     bid = next(it_bids, None)
     ask = next(it_asks, None)
 
     exec_qty = 0
     exec_price = None
-    # not work
-    # way = 'bid' if bid['price'] > ask['price'] else 'ask'
-    way = 'bid'
-    results = []
+
+    if bid is None:
+        return exec_price, exec_qty
+
+    price = bid['price']
 
     while bid is not None and ask is not None:
         while not is_cross(bid["price"], ask["price"]):
@@ -28,43 +26,39 @@ def auction_match(bids, asks):
             if ask is None:
                 return exec_price, exec_qty
 
-        price = bid['price'] if way is 'bid' else ask['price']
-        # Cannot take min here, wrong!
-        # price = min(bid['price'], ask['price'])
-        if is_cross(bid["price"], ask["price"]):
-            qty = min(bid['qty'], ask['qty'])
-            if qty > exec_qty:
-                exec_price = price
-                exec_qty = qty
-            results.append({'price': price, 'qty': qty})
+        qty = min(bid['qty'], ask['qty'])
+        if qty > exec_qty:
+            exec_price = price
+            exec_qty = qty
+
+        print({'price': price, 'qty': qty})
 
         next_bid = next(it_bids, None)
         next_ask = next(it_asks, None)
         if next_bid is None and next_ask is None:
-            break
+            return exec_price, exec_qty
         elif next_bid is None:
-            next_bid = bid
+            price = ask['price']
+            ask = next_ask
+            continue
         elif next_ask is None:
-            next_ask = ask
+            price = bid['price']
+            bid = next_bid
+            continue
 
         if next_bid['price'] == next_ask['price']:
             bid = next_bid
             ask = next_ask
+            price = bid['price']
         elif next_bid['price'] > next_ask['price']:
-            way = 'bid'
             bid = next_bid
+            price = bid['price']
+            it_asks = iter(list(itertools.chain([next_ask], it_asks)))
         else:
-            way = 'ask'
             ask = next_ask
+            price = ask['price']
+            it_bids = iter(list(itertools.chain([next_bid], it_bids)))
 
-        # if is_cross(next_bid['price'], ask['price']):
-        #     way = 'bid'
-        #     bid = next_bid
-        # else:
-        #     way = 'ask'
-        #     ask = next(it_asks, None)
-
-    print('Results: {}'.format(results))
     return exec_price, exec_qty
 
 
